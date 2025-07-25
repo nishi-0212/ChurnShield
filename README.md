@@ -3,7 +3,6 @@
 ![Python](https://img.shields.io/badge/Python-3.9+-blue?logo=python)
 ![Streamlit](https://img.shields.io/badge/Streamlit-Cloud-red?logo=streamlit)
 ![XGBoost](https://img.shields.io/badge/ML-XGBoost-green)
-![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
 **ChurnShield** is an ML-powered web app that predicts **customer churn** and provides **insights to retain customers**.  
 Built with **Streamlit**, **XGBoost**, and **SHAP**, it offers a modern, interactive, and explainable AI experience.
@@ -11,8 +10,7 @@ Built with **Streamlit**, **XGBoost**, and **SHAP**, it offers a modern, interac
 ---
 
 ## 🚀 **Live Demo**
-👉 [**Try ChurnShield Now!**](https://share.streamlit.io/yourusername/churnshield)  
-*(Replace with your Streamlit Cloud app link.)*
+👉 [**Try ChurnShield Now!**](https://churnshieldbynishi.streamlit.app/)  
 
 ---
 
@@ -20,18 +18,6 @@ Built with **Streamlit**, **XGBoost**, and **SHAP**, it offers a modern, interac
 - **Customer Churn Prediction** using a trained XGBoost model.
 - **Loyalty Score Gauge** for churn probability.
 - **SHAP Explainability** – Feature importance and individual prediction explanation.
-- **Visual EDA Dashboard** – 6 key churn trends with business insights.
-- **Reset All Inputs** for quick refresh.
-- Modern **pastel theme UI**.
-
----
-
-## 📊 **Visual Insights**
-The dashboard includes:
-- Churn by **Gender**, **Contract**, and **Internet Service**.
-- **Monthly vs Total Charges** trends.
-- Correlation **heatmap**.
-- Insights directly below each plot.
 
 ---
 
