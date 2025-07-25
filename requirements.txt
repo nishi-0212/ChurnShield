@@ -1,7 +1,10 @@
 streamlit
 xgboost
-scikit-learn
 pandas
 numpy
+seaborn
+matplotlib
+scikit-learn
+joblib
 shap
 plotly
