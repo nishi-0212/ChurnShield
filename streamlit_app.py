@@ -105,11 +105,16 @@ st.session_state.inputs = inputs.copy()
 df = pd.DataFrame([inputs])
 
 # Encode categorical values
-for col in df.columns:
-    if df[col].dtype == object:
-        le = encoder.get(col)
-        if le:
-            df[col] = le.transform(df[col])
+# Make sure input columns match training columns
+df = pd.get_dummies(df)
+
+# Align columns with training data
+missing_cols = [col for col in encoder if col not in df.columns]
+for col in missing_cols:
+    df[col] = 0
+
+df = df[encoder]  # re-order columns to match model
+
 
 # Predict
 pred_proba = model.predict_proba(df)[0][1]
@@ -150,4 +155,5 @@ with st.expander("📘 What is SHAP?"):
 
     This helps us understand *why* the model made a decision.
     """)
+
 
