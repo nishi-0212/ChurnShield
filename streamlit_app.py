@@ -82,7 +82,7 @@ st.sidebar.header("📝 Input Customer Details")
 
 # Reset button functionality
 if st.sidebar.button("🔄 Reset All Inputs"):
-    for key, value in DEFAULT_VALUES.items():
+    for key, value in default_inputs.items():
         st.session_state[key] = value
     st.rerun()
 
@@ -269,6 +269,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
