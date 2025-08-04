@@ -91,83 +91,83 @@ values = {key: st.session_state.get(key, default_inputs[key]) for key in default
 
 # Sidebar widgets
 gender = st.sidebar.selectbox(
-    "Gender", ["Male", "Female"], 
+    "What is your Gender?", ["Male", "Female"], 
     index=["Male", "Female"].index(values["Gender"])
 )
 
 senior_citizen_label = st.sidebar.selectbox(
-    "Senior Citizen", ["No", "Yes"],
+    "Are you a Senior Citizen?", ["No", "Yes"],
     index=["No", "Yes"].index(values["SeniorCitizen"])
 )
 senior_citizen = 1 if senior_citizen_label == "Yes" else 0
 
 partner = st.sidebar.selectbox(
-    "Partner", ["Yes", "No"], 
+    "Do you share your subscription with a Partner?", ["Yes", "No"], 
     index=["Yes", "No"].index(values["Partner"])
 )
 
 dependents = st.sidebar.selectbox(
-    "Dependents", ["Yes", "No"], 
+    "Are there any dependents on your subscription?", ["Yes", "No"], 
     index=["Yes", "No"].index(values["Dependents"])
 )
 
 tenure = st.sidebar.slider(
-    "Tenure (in months)", 0, 72, 
+    "What is the total Tenure of your subscription? (in months)", 0, 100, 
     int(values["tenure"])
 )
 
 phone_service = st.sidebar.selectbox(
-    "Phone Service", ["Yes", "No"], 
+    "Is Phone Service available?", ["Yes", "No"], 
     index=["Yes", "No"].index(values["PhoneService"])
 )
 
 multiple_lines = st.sidebar.selectbox(
-    "Multiple Lines", ["Yes", "No", "No phone service"], 
+    "Can you use your subsciption on multiple devices?", ["Yes", "No", "No phone service"], 
     index=["Yes", "No", "No phone service"].index(values["MultipleLines"])
 )
 
 internet_service = st.sidebar.selectbox(
-    "Internet Service", ["DSL", "Fiber optic", "No"], 
+    "Do you have Internet Access?", ["DSL", "Fiber optic", "No"], 
     index=["DSL", "Fiber optic", "No"].index(values["InternetService"])
 )
 
 online_security = st.sidebar.selectbox(
-    "Online Security", ["Yes", "No", "No internet service"], 
+    "Do you have online Security?", ["Yes", "No", "No internet service"], 
     index=["Yes", "No", "No internet service"].index(values["OnlineSecurity"])
 )
 
 online_backup = st.sidebar.selectbox(
-    "Online Backup", ["Yes", "No", "No internet service"], 
+    "Do you have Online Backup?", ["Yes", "No", "No internet service"], 
     index=["Yes", "No", "No internet service"].index(values["OnlineBackup"])
 )
 
 device_protection = st.sidebar.selectbox(
-    "Device Protection", ["Yes", "No", "No internet service"], 
+    "Do you have Device Protection?", ["Yes", "No", "No internet service"], 
     index=["Yes", "No", "No internet service"].index(values["DeviceProtection"])
 )
 
 tech_support = st.sidebar.selectbox(
-    "Tech Support", ["Yes", "No", "No internet service"], 
+    "Is Tech Support easily available?", ["Yes", "No", "No internet service"], 
     index=["Yes", "No", "No internet service"].index(values["TechSupport"])
 )
 
 streaming_tv = st.sidebar.selectbox(
-    "Streaming TV", ["Yes", "No", "No internet service"], 
+    "TV Streaming?", ["Yes", "No", "No internet service"], 
     index=["Yes", "No", "No internet service"].index(values["StreamingTV"])
 )
 
 streaming_movies = st.sidebar.selectbox(
-    "Streaming Movies", ["Yes", "No", "No internet service"], 
+    "Can you stream Movies?", ["Yes", "No", "No internet service"], 
     index=["Yes", "No", "No internet service"].index(values["StreamingMovies"])
 )
 
 contract = st.sidebar.selectbox(
-    "Contract", ["Month-to-month", "One year", "Two year"], 
+    "Nature of Contract", ["Month-to-month", "One year", "Two year"], 
     index=["Month-to-month", "One year", "Two year"].index(values["Contract"])
 )
 
 paperless_billing = st.sidebar.selectbox(
-    "Paperless Billing", ["Yes", "No"], 
+    "Is your Billing Paperless?", ["Yes", "No"], 
     index=["Yes", "No"].index(values["PaperlessBilling"])
 )
 
@@ -269,5 +269,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
