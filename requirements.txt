@@ -8,3 +8,4 @@ scikit-learn
 joblib
 shap
 plotly
+streamlit-shap
