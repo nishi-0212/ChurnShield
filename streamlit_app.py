@@ -44,22 +44,22 @@ st.markdown(
 # Default Input Values
 # -----------------------
 default_inputs = {
-    "Gender": "Female",
-    "SeniorCitizen": "No",  
-    "Partner": "No",
-    "Dependents": "No",
-    "tenure": 0,
-    "PhoneService": "No",
-    "MultipleLines": "No",
-    "InternetService": "No",
-    "OnlineSecurity": "No",
-    "OnlineBackup": "No",
-    "DeviceProtection": "No",
-    "TechSupport": "No",
-    "StreamingTV": "No",
-    "StreamingMovies": "No",
-    "Contract": "Month-to-month",
-    "PaperlessBilling": "No",
+    "What is your Gender?": "Female",
+    "Are you a Senior Citizen?": "No",  
+    "Do you share your subscription with a Partner?": "No",
+    "Are there any dependents on your subscription?": "No",
+    "What is the total Tenure of your subscription?": 0,
+    "Is Phone Service available?": "No",
+    "Can you use your subsciption on multiple devices?": "No",
+    "Do you have Internet Access?": "No",
+    "Do you have online Security?": "No",
+    "Do you have Online Backup?": "No",
+    "Do you have Device Protection?": "No",
+    "Is Tech Support easily available?": "No",
+    "TV Streaming?": "No",
+    "Can you stream Movies?": "No",
+    "Nature of Contract": "Month-to-month",
+    "Is your Billing Paperless?": "No",
     "PaymentMethod": "Electronic check",
     "MonthlyCharges": 0.0,
     "TotalCharges": 0.0,
@@ -269,6 +269,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
