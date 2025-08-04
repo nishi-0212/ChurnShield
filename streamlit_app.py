@@ -36,7 +36,7 @@ DEFAULT_VALUES = {
     "PaperlessBilling": "Yes",
     "PaymentMethod": "Electronic check",
     "tenure": 1,
-    "MonthlyCharges": 0
+    "MonthlyCharges": 0.1
 }
 
 # Reset flag
@@ -160,4 +160,5 @@ with st.expander("📘 What is SHAP?"):
 
     This helps understand *why* the model made a certain decision.
     """)
+
 
