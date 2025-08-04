@@ -1,134 +1,162 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import joblib
 import shap
 import matplotlib.pyplot as plt
+import joblib
 from streamlit_shap import st_shap
 
-# Load model and scaler
-model = joblib.load("models/xgboost_model.pkl")
-scaler = joblib.load("models/scaler.pkl")
+# Set page config
+st.set_page_config(
+    page_title="ChurnShield - Customer Churn Predictor",
+    page_icon="🛡️",
+    layout="wide",
+)
 
-# SHAP Explainer
-explainer = shap.TreeExplainer(model)
+# Load model and encoder
+model = joblib.load("churnshield_model.pkl")
+encoder = joblib.load("model_columns.pkl")
 
-# Default inputs
-DEFAULT_INPUTS = {
-    "Gender": "Female",
+# Default input values (single source of truth)
+DEFAULT_VALUES = {
+    "gender": "Female",
     "SeniorCitizen": "No",
-    "Partner": "Yes",
+    "Partner": "No",
     "Dependents": "No",
-    "tenure": 12,
     "PhoneService": "Yes",
     "MultipleLines": "No",
     "InternetService": "DSL",
     "OnlineSecurity": "No",
-    "OnlineBackup": "Yes",
+    "OnlineBackup": "No",
     "DeviceProtection": "No",
     "TechSupport": "No",
     "StreamingTV": "No",
-    "StreamingMovies": "Yes",
+    "StreamingMovies": "No",
     "Contract": "Month-to-month",
     "PaperlessBilling": "Yes",
     "PaymentMethod": "Electronic check",
-    "MonthlyCharges": 70.0,
-    "TotalCharges": 800.0
+    "tenure": 1,
+    "MonthlyCharges": 29.85
 }
 
-# Set page title
-st.set_page_config(page_title="ChurnShield", layout="wide")
+# Reset flag
+if "reset" not in st.session_state:
+    st.session_state.reset = False
 
-# Title
-st.title("🔐 ChurnShield – Telecom Churn Prediction & Explanation")
-st.write("Predict whether a customer will churn and understand the reasons behind it using Explainable AI (SHAP).")
-
-# Sidebar
-st.sidebar.header("📝 Input Customer Details")
-
-# Reset All Inputs
 if st.sidebar.button("🔄 Reset All Inputs"):
-    for key, value in DEFAULT_INPUTS.items():
-        st.session_state[key] = value
-    st.rerun()
+    st.session_state.reset = True
 
-# Load current values
-values = {key: st.session_state.get(key, DEFAULT_INPUTS[key]) for key in DEFAULT_INPUTS}
+st.title("🛡️ ChurnShield - Customer Churn Predictor")
+st.markdown("""
+Welcome to **ChurnShield**, a machine learning-powered app designed to predict customer churn based on service usage and demographic information. 🔍📉
 
-# Sidebar Inputs
-gender = st.sidebar.selectbox("What is the customer's gender?", ["Male", "Female"], index=["Male", "Female"].index(values["Gender"]))
-senior_citizen_label = st.sidebar.selectbox("Is the customer a senior citizen?", ["No", "Yes"], index=["No", "Yes"].index(values["SeniorCitizen"]))
-senior_citizen = 1 if senior_citizen_label == "Yes" else 0
-partner = st.sidebar.selectbox("Does the customer have a partner?", ["Yes", "No"], index=["Yes", "No"].index(values["Partner"]))
-dependents = st.sidebar.selectbox("Does the customer have dependents?", ["Yes", "No"], index=["Yes", "No"].index(values["Dependents"]))
-tenure = st.sidebar.slider("How many months has the customer stayed with the company?", 0, 72, int(values["tenure"]))
-phone_service = st.sidebar.selectbox("Does the customer have a phone service?", ["Yes", "No"], index=["Yes", "No"].index(values["PhoneService"]))
-multiple_lines = st.sidebar.selectbox("Does the customer have multiple lines?", ["Yes", "No", "No phone service"], index=["Yes", "No", "No phone service"].index(values["MultipleLines"]))
-internet_service = st.sidebar.selectbox("What type of internet service does the customer use?", ["DSL", "Fiber optic", "No"], index=["DSL", "Fiber optic", "No"].index(values["InternetService"]))
-online_security = st.sidebar.selectbox("Does the customer have online security?", ["Yes", "No", "No internet service"], index=["Yes", "No", "No internet service"].index(values["OnlineSecurity"]))
-online_backup = st.sidebar.selectbox("Does the customer have online backup?", ["Yes", "No", "No internet service"], index=["Yes", "No", "No internet service"].index(values["OnlineBackup"]))
-device_protection = st.sidebar.selectbox("Is the customer's device protected?", ["Yes", "No", "No internet service"], index=["Yes", "No", "No internet service"].index(values["DeviceProtection"]))
-tech_support = st.sidebar.selectbox("Does the customer have tech support?", ["Yes", "No", "No internet service"], index=["Yes", "No", "No internet service"].index(values["TechSupport"]))
-streaming_tv = st.sidebar.selectbox("Does the customer stream TV?", ["Yes", "No", "No internet service"], index=["Yes", "No", "No internet service"].index(values["StreamingTV"]))
-streaming_movies = st.sidebar.selectbox("Does the customer stream movies?", ["Yes", "No", "No internet service"], index=["Yes", "No", "No internet service"].index(values["StreamingMovies"]))
-contract = st.sidebar.selectbox("What type of contract does the customer have?", ["Month-to-month", "One year", "Two year"], index=["Month-to-month", "One year", "Two year"].index(values["Contract"]))
-paperless_billing = st.sidebar.selectbox("Is billing paperless?", ["Yes", "No"], index=["Yes", "No"].index(values["PaperlessBilling"]))
-payment_method = st.sidebar.selectbox("How does the customer pay?", ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"], index=["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"].index(values["PaymentMethod"]))
-monthly_charges = st.sidebar.number_input("What is the customer's monthly charge?", min_value=0.0, max_value=200.0, value=float(values["MonthlyCharges"]))
-total_charges = st.sidebar.number_input("What is the customer's total charge till now?", min_value=0.0, max_value=10000.0, value=float(values["TotalCharges"]))
+Use the sidebar to input customer details. Our model will predict whether the customer is likely to churn and explain which features influenced the decision.
+""")
 
-# Prepare input dataframe
-input_data = pd.DataFrame({
-    "gender": [gender],
-    "SeniorCitizen": [senior_citizen],
-    "Partner": [partner],
-    "Dependents": [dependents],
-    "tenure": [tenure],
-    "PhoneService": [phone_service],
-    "MultipleLines": [multiple_lines],
-    "InternetService": [internet_service],
-    "OnlineSecurity": [online_security],
-    "OnlineBackup": [online_backup],
-    "DeviceProtection": [device_protection],
-    "TechSupport": [tech_support],
-    "StreamingTV": [streaming_tv],
-    "StreamingMovies": [streaming_movies],
-    "Contract": [contract],
-    "PaperlessBilling": [paperless_billing],
-    "PaymentMethod": [payment_method],
-    "MonthlyCharges": [monthly_charges],
-    "TotalCharges": [total_charges]
-})
+st.sidebar.header("📋 Customer Profile")
+
+values = {}
+
+def get_input(label, options=None, default=None):
+    if options:
+        return st.sidebar.selectbox(label, options, index=options.index(default))
+    return st.sidebar.slider(label, 0.0, 150.0, float(default))
+
+# All fields and user-friendly labels
+fields = [
+    ("gender", ["Male", "Female"], "What is your Gender?"),
+    ("SeniorCitizen", ["No", "Yes"], "Is the Customer a Senior Citizen?"),
+    ("Partner", ["No", "Yes"], "Do they have a Partner?"),
+    ("Dependents", ["No", "Yes"], "Do they have Dependents?"),
+    ("PhoneService", ["No", "Yes"], "Is Phone Service Active?"),
+    ("MultipleLines", ["No", "Yes", "No phone service"], "Do they have Multiple Lines?"),
+    ("InternetService", ["DSL", "Fiber optic", "No"], "What type of Internet Service?"),
+    ("OnlineSecurity", ["No", "Yes", "No internet service"], "Is Online Security enabled?"),
+    ("OnlineBackup", ["No", "Yes", "No internet service"], "Is Online Backup enabled?"),
+    ("DeviceProtection", ["No", "Yes", "No internet service"], "Is Device Protection active?"),
+    ("TechSupport", ["No", "Yes", "No internet service"], "Do they have Tech Support?"),
+    ("StreamingTV", ["No", "Yes", "No internet service"], "Do they use Streaming TV?"),
+    ("StreamingMovies", ["No", "Yes", "No internet service"], "Do they use Streaming Movies?"),
+    ("Contract", ["Month-to-month", "One year", "Two year"], "What type of Contract?"),
+    ("PaperlessBilling", ["No", "Yes"], "Is Paperless Billing enabled?"),
+    ("PaymentMethod", [
+        "Electronic check", "Mailed check",
+        "Bank transfer (automatic)", "Credit card (automatic)"
+    ], "What is the Payment Method?")
+]
+
+# Sidebar form
+for key, choices, question in fields:
+    default_val = DEFAULT_VALUES[key] if not st.session_state.reset else DEFAULT_VALUES[key]
+    values[key] = get_input(label=question, options=choices, default=default_val)
+
+# Tenure
+tenure = st.sidebar.slider(
+    "🕓 How many months has the customer been active?", 0, 72, DEFAULT_VALUES["tenure"] if not st.session_state.reset else DEFAULT_VALUES["tenure"]
+)
+
+# Average Monthly Charge input
+avg_monthly_charge = st.sidebar.slider(
+    "💸 Average Monthly Bill", 0.0, 150.0, DEFAULT_VALUES["MonthlyCharges"] if not st.session_state.reset else DEFAULT_VALUES["MonthlyCharges"]
+)
+
+# Auto compute
+monthly_charges = avg_monthly_charge
+total_charges = avg_monthly_charge * tenure
+
+# Add computed
+values["tenure"] = tenure
+values["MonthlyCharges"] = monthly_charges
+values["TotalCharges"] = total_charges
+
+# Reset flag off after input
+st.session_state.reset = False
+
+# DataFrame
+df = pd.DataFrame([values])
 
 # Encoding
-input_data_encoded = pd.get_dummies(input_data)
-missing_cols = set(scaler.feature_names_in_) - set(input_data_encoded.columns)
-for col in missing_cols:
-    input_data_encoded[col] = 0
-input_data_encoded = input_data_encoded[scaler.feature_names_in_]
-
-# Scale
-input_scaled = scaler.transform(input_data_encoded)
+for col in df.columns:
+    if df[col].dtype == object:
+        le = encoder.get(col)
+        if le:
+            df[col] = le.transform(df[col])
 
 # Predict
-prediction = model.predict(input_scaled)[0]
-proba = model.predict_proba(input_scaled)[0][1]
+pred_proba = model.predict_proba(df)[0][1]
+pred = model.predict(df)[0]
 
-# Output
-st.subheader("📊 Prediction Result")
-if prediction == 1:
-    st.error(f"⚠️ The customer is **likely to churn**. (Probability: {proba:.2f})")
-else:
-    st.success(f"✅ The customer is **not likely to churn**. (Probability: {proba:.2f})")
+st.subheader("🔍 Prediction Result")
 
-# SHAP Explanation
-st.subheader("🔍 Why this prediction?")
-shap_values = explainer.shap_values(input_data_encoded)
-fig, ax = plt.subplots()
-shap.summary_plot(shap_values, input_data_encoded, plot_type="bar", show=False)
-st.pyplot(fig)
+col1, col2 = st.columns([1, 3])
 
-with st.expander("📌 See full SHAP explanation"):
-    st_shap(shap.force_plot(explainer.expected_value, shap_values[0], input_data_encoded.iloc[0]), height=300)
+with col1:
+    st.metric(
+        label="Churn Probability",
+        value=f"{pred_proba*100:.2f}%",
+        delta="High Risk" if pred_proba > 0.5 else "Low Risk",
+        delta_color="inverse" if pred_proba > 0.5 else "normal"
+    )
 
+with col2:
+    st.write(
+        f"Based on the inputs provided, this customer is **{'likely' if pred else 'not likely'} to churn**."
+    )
 
+# SHAP
+st.subheader("📊 Feature Importance with SHAP")
+explainer = shap.Explainer(model)
+shap_values = explainer(df)
+
+st_shap(shap.plots.waterfall(shap_values[0]), height=400)
+
+with st.expander("📘 What is SHAP?"):
+    st.markdown("""
+    **SHAP (SHapley Additive exPlanations)** is a technique used to explain individual predictions. 
+
+    In the above plot:
+    - Each bar shows how a feature pushes the prediction toward **churn** (red) or **no churn** (blue).
+    - The longer the bar, the more impact that feature has.
+
+    This helps understand *why* the model made a certain decision.
+    """)
