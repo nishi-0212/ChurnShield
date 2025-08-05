@@ -243,7 +243,8 @@ input_encoded = input_encoded[model_columns]
 # -----------------------
 # Prediction & SHAP
 # -----------------------
-'''
+explainer = shap.TreeExplainer(model)
+
 if st.button("🔮 Predict Churn"):
     prediction = model.predict(input_encoded)[0]
     prob = model.predict_proba(input_encoded)[0][1] * 100
@@ -270,6 +271,7 @@ if st.button("🔮 Predict Churn"):
     else:
         st.success(f"✅ The customer is **Not likely to Churn** (Churn probability: **{prob:.2f}%**).")
 
+   '''
     # SHAP Explanation
     st.write("### 🔍 Why this Prediction?")
     #shap_values = explainer.shap_values(input_encoded)
@@ -292,35 +294,45 @@ if st.button("🔮 Predict Churn"):
 
     st.pyplot(fig)
 '''
-# SHAP Explanation for Single Prediction
+# SHAP Explanation
+st.write("### 🔍 Why this Prediction?")
+shap_values = explainer.shap_values(input_encoded)
 
-st.subheader("🔍 Model Explanation")
+# Waterfall plot
+st.markdown("#### 📉 Waterfall Plot")
+fig, ax = plt.subplots(figsize=(8, 5))
+shap.plots._waterfall.waterfall_legacy(
+    explainer.expected_value[1], shap_values[1][0], input_encoded.columns, max_display=8, show=False
+)
+st.pyplot(fig)
 
-# Force plot – interactive & streamlit-compatible
+# Force plot
+st.markdown("#### 💥 Force Plot")
 force_plot = shap.plots.force(
-    explainer.expected_value, shap_values[0], input_encoded.iloc[0], matplotlib=False, show=False
+    explainer.expected_value[1], shap_values[1][0], input_encoded.iloc[0], matplotlib=False, show=False
 )
 components.html(shap.getjs() + force_plot.html(), height=300)
 
-st.markdown("---")
-
-# Decision plot – clean step-by-step breakdown
-st.set_option('deprecation.showPyplotGlobalUse', False)
-st.subheader("📊 Step-by-step Decision Plot")
+# Decision plot
+st.markdown("#### 🧠 Decision Plot")
 shap.decision_plot(
-    explainer.expected_value,
-    shap_values[0],
-    input_encoded.iloc[0],
-    feature_names=input_encoded.columns
+    explainer.expected_value[1],
+    shap_values[1],
+    input_encoded,
+    feature_names=input_encoded.columns,
+    highlight=0  # Highlights the first input row
 )
-st.markdown("### 🗣️ What this means in simple words:")
+
+# User-friendly explanation
+st.markdown("### 🗣️ What does this mean?")
 st.markdown("""
-- The model begins with an average prediction for churn.
-- It then adjusts this prediction based on your inputs.
-- Features shown in **red** increase the risk of churn, while those in **blue** decrease it.
-- The **Force Plot** shows how much each feature pushes the prediction up or down.
-- The **Decision Plot** shows this process step-by-step like a story — each feature adds or subtracts from the prediction.
+- The model starts with an average churn probability for all customers.
+- Then it adjusts the score based on your customer's features.
+- The **Waterfall Plot** shows how each feature pushes the prediction up or down.
+- The **Force Plot** visualizes this as red (↑ churn) and blue (↓ churn) forces.
+- The **Decision Plot** traces the model's reasoning step-by-step.
 """)
+
 
 # -----------------------
 # Footer
@@ -334,6 +346,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
