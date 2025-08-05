@@ -178,7 +178,12 @@ tenure = st.sidebar.slider(
 )
 
 monthly_charges = st.sidebar.number_input(
-    "Monthly Charges", min_value=0.0, max_value=2000.0, value=float(values["MonthlyCharges"], step=1.0)
+    "Monthly Charges",
+    min_value=0.0,
+    max_value=2000.0,
+    value=float(values["MonthlyCharges"]),
+    step=1.0  # 👈 this sets the increment/decrement step to 1.0
+
 )
 
 '''total_charges = st.sidebar.number_input(
@@ -275,6 +280,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
