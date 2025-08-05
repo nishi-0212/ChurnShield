@@ -303,7 +303,7 @@ shap_values = explainer.shap_values(input_encoded)
 # Force plot
 st.markdown("#### 💥 Force Plot")
 force_plot = shap.plots.force(
-    explainer.expected_value[1], shap_values[1][0], input_encoded.iloc[0], matplotlib=False, show=False
+    explainer.expected_value[0], shap_values[1][0], input_encoded.iloc[0], matplotlib=False, show=False
 )
 components.html(shap.getjs() + force_plot.html(), height=300)
 
@@ -340,6 +340,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
