@@ -111,11 +111,6 @@ dependents = st.sidebar.selectbox(
     index=["Yes", "No"].index(values["Dependents"])
 )
 
-tenure = st.sidebar.slider(
-    "How long is the customer's tenure?", 0, 100, 
-    int(values["tenure"])
-)
-
 phone_service = st.sidebar.selectbox(
     "Do they have phone service?", ["Yes", "No"], 
     index=["Yes", "No"].index(values["PhoneService"])
@@ -175,6 +170,11 @@ payment_method = st.sidebar.selectbox(
     "What is their mode of payment?",
     ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"],
     index=["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"].index(values["PaymentMethod"])
+)
+
+tenure = st.sidebar.slider(
+    "How long is the customer's tenure?", 0, 100, 
+    int(values["tenure"])
 )
 
 monthly_charges = st.sidebar.number_input(
@@ -275,5 +275,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
