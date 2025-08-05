@@ -173,12 +173,12 @@ payment_method = st.sidebar.selectbox(
 )
 
 tenure = st.sidebar.slider(
-    "How long is the customer's tenure?", 0, 100, 
+    "How long is the customer's tenure? (in months)", 0, 100, 
     int(values["tenure"])
 )
 
 monthly_charges = st.sidebar.number_input(
-    "Monthly Charges", min_value=0.0, max_value=2000.0, value=float(values["MonthlyCharges"])
+    "Monthly Charges", min_value=0.0, max_value=2000.0, value=float(values["MonthlyCharges"], step=1.0)
 )
 
 '''total_charges = st.sidebar.number_input(
@@ -275,6 +275,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
