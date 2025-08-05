@@ -186,10 +186,6 @@ monthly_charges = st.sidebar.number_input(
 
 )
 
-'''total_charges = st.sidebar.number_input(
-    "Total Charges", min_value=0.0, max_value=1000000.0, value=float(values["TotalCharges"])
-)'''
-
 # 🔢 Automatically calculate Total Charges
 total_charges = round(monthly_charges * tenure, 2)
 
@@ -280,6 +276,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
