@@ -5,6 +5,19 @@ import numpy as np
 import shap
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set(style="whitegrid", palette="pastel")
+
+plt.rcParams.update({
+    "axes.facecolor": "#f7f7f7",
+    "axes.edgecolor": "#cccccc",
+    "axes.grid": True,
+    "grid.color": "#e6e6e6",
+    "grid.linestyle": "--",
+    "grid.linewidth": 0.5,
+    "font.size": 10,
+    "figure.facecolor": "#f7f7f7"
+})
 
 # -----------------------
 # Load Model & Columns
@@ -256,13 +269,24 @@ if st.button("🔮 Predict Churn"):
 
     # SHAP Explanation
     st.write("### 🔍 Why this Prediction?")
-    shap_values = explainer.shap_values(input_encoded)
-    shap_df = pd.DataFrame({
-        "Feature": input_encoded.columns,
-        "SHAP Value": shap_values[0]
-    }).sort_values(by="SHAP Value", key=abs, ascending=False).head(5)
+    #shap_values = explainer.shap_values(input_encoded)
+    #shap_df = pd.DataFrame({
+    #    "Feature": input_encoded.columns,
+    #    "SHAP Value": shap_values[0]
+    #}).sort_values(by="SHAP Value", key=abs, ascending=False).head(5)
 
-    st.bar_chart(shap_df.set_index("Feature"))
+    #st.bar_chart(shap_df.set_index("Feature"))
+    shap_values = explainer.shap_values(input_encoded)
+
+    st.write("#### 💡 Top SHAP Feature Contributions")
+    st.write("Visualizing how features impact churn prediction.")
+
+    # Waterfall plot using pastel look
+    fig, ax = plt.subplots(figsize=(8, 5))
+    shap.plots._waterfall.waterfall_legacy(
+        explainer.expected_value[1], shap_values[1][0], input_encoded.columns, max_display=8, show=False
+    )
+    st.pyplot(fig)
 
 # -----------------------
 # Footer
@@ -276,6 +300,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
