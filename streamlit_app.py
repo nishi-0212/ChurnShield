@@ -3,10 +3,12 @@ import pandas as pd
 import joblib
 import numpy as np
 import shap
+import streamlit.components.v1 as components
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set(style="whitegrid", palette="pastel")
+
 
 plt.rcParams.update({
     "axes.facecolor": "#f7f7f7",
@@ -241,6 +243,7 @@ input_encoded = input_encoded[model_columns]
 # -----------------------
 # Prediction & SHAP
 # -----------------------
+'''
 if st.button("🔮 Predict Churn"):
     prediction = model.predict(input_encoded)[0]
     prob = model.predict_proba(input_encoded)[0][1] * 100
@@ -288,6 +291,36 @@ if st.button("🔮 Predict Churn"):
     )
 
     st.pyplot(fig)
+'''
+# SHAP Explanation for Single Prediction
+
+st.subheader("🔍 Model Explanation")
+
+# Force plot – interactive & streamlit-compatible
+force_plot = shap.plots.force(
+    explainer.expected_value, shap_values[0], input_encoded.iloc[0], matplotlib=False, show=False
+)
+components.html(shap.getjs() + force_plot.html(), height=300)
+
+st.markdown("---")
+
+# Decision plot – clean step-by-step breakdown
+st.set_option('deprecation.showPyplotGlobalUse', False)
+st.subheader("📊 Step-by-step Decision Plot")
+shap.decision_plot(
+    explainer.expected_value,
+    shap_values[0],
+    input_encoded.iloc[0],
+    feature_names=input_encoded.columns
+)
+st.markdown("### 🗣️ What this means in simple words:")
+st.markdown("""
+- The model begins with an average prediction for churn.
+- It then adjusts this prediction based on your inputs.
+- Features shown in **red** increase the risk of churn, while those in **blue** decrease it.
+- The **Force Plot** shows how much each feature pushes the prediction up or down.
+- The **Decision Plot** shows this process step-by-step like a story — each feature adds or subtracts from the prediction.
+""")
 
 # -----------------------
 # Footer
@@ -301,6 +334,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
