@@ -1,112 +1,123 @@
-# -- CODE BLOCK START --
-# All logic is untouched; only questions have been rewritten for clarity.
+import streamlit as st
+import numpy as np
+import pandas as pd
+import joblib
+import shap
+import matplotlib.pyplot as plt
 
-# Replace all your existing sidebar widgets with this updated section:
+# Load model and encoder
+model = joblib.load("churnshield_model.pkl")
+encoder = joblib.load("model_columns.pkl")
 
-st.sidebar.header("📝 Customer Information")
+# Define the input features required by the model (except calculated ones)
+INPUT_FEATURES = [
+    "gender", "SeniorCitizen", "Partner", "Dependents",
+    "tenure", "PhoneService", "MultipleLines", "InternetService",
+    "OnlineSecurity", "OnlineBackup", "DeviceProtection",
+    "TechSupport", "StreamingTV", "StreamingMovies",
+    "Contract", "PaperlessBilling", "PaymentMethod"
+]
 
-# Reset button functionality
-if st.sidebar.button("🔄 Reset All Inputs"):
-    for key, value in default_inputs.items():
-        st.session_state[key] = value
-    st.rerun()
+# Define user-friendly prompts
+PROMPTS = {
+    "gender": "What is your gender?",
+    "SeniorCitizen": "Are you a senior citizen?",
+    "Partner": "Do you have a partner?",
+    "Dependents": "Do you have any dependents?",
+    "tenure": "How many months have you been a customer?",
+    "PhoneService": "Do you use phone service?",
+    "MultipleLines": "Do you have multiple lines?",
+    "InternetService": "What kind of internet service do you use?",
+    "OnlineSecurity": "Do you have online security?",
+    "OnlineBackup": "Do you use online backup?",
+    "DeviceProtection": "Do you have device protection?",
+    "TechSupport": "Do you use tech support?",
+    "StreamingTV": "Do you stream TV?",
+    "StreamingMovies": "Do you stream movies?",
+    "Contract": "What is the contract type?",
+    "PaperlessBilling": "Do you use paperless billing?",
+    "PaymentMethod": "What is your payment method?"
+}
 
-# Get current values
-values = {key: st.session_state.get(key, default_inputs[key]) for key in default_inputs}
+# Default values
+DEFAULT_VALUES = {
+    "gender": "Female",
+    "SeniorCitizen": "No",
+    "Partner": "Yes",
+    "Dependents": "No",
+    "tenure": 12,
+    "PhoneService": "Yes",
+    "MultipleLines": "No",
+    "InternetService": "Fiber optic",
+    "OnlineSecurity": "No",
+    "OnlineBackup": "Yes",
+    "DeviceProtection": "No",
+    "TechSupport": "No",
+    "StreamingTV": "Yes",
+    "StreamingMovies": "No",
+    "Contract": "Month-to-month",
+    "PaperlessBilling": "Yes",
+    "PaymentMethod": "Electronic check"
+}
 
-gender = st.sidebar.selectbox(
-    "What is your gender?", ["Male", "Female"], 
-    index=["Male", "Female"].index(values["Gender"])
-)
+# Streamlit UI
+st.set_page_config(page_title="ChurnShield: Customer Churn Predictor", layout="wide")
+st.title("🔐 ChurnShield")
+st.subheader("Smart, Explainable Churn Prediction for Telecom Users")
 
-senior_citizen_label = st.sidebar.selectbox(
-    "Are you a senior citizen?", ["No", "Yes"],
-    index=["No", "Yes"].index(values["SeniorCitizen"])
-)
-senior_citizen = 1 if senior_citizen_label == "Yes" else 0
+# Sidebar
+st.sidebar.header("Enter Customer Details")
 
-partner = st.sidebar.selectbox(
-    "Do you have a partner?", ["Yes", "No"], 
-    index=["Yes", "No"].index(values["Partner"])
-)
+# Reset button
+if st.sidebar.button("Reset All Inputs"):
+    st.experimental_rerun()
 
-dependents = st.sidebar.selectbox(
-    "Do you have any dependents (like children)?", ["Yes", "No"], 
-    index=["Yes", "No"].index(values["Dependents"])
-)
+user_inputs = {}
 
-tenure = st.sidebar.slider(
-    "How many months have you been with us?", 0, 72, 
-    int(values["tenure"])
-)
+for col in INPUT_FEATURES:
+    if col == "tenure":
+        user_inputs[col] = st.sidebar.slider(PROMPTS[col], 0, 72, DEFAULT_VALUES[col])
+    elif col in ["SeniorCitizen", "Partner", "Dependents", "PhoneService", "PaperlessBilling"]:
+        user_inputs[col] = st.sidebar.radio(PROMPTS[col], ["Yes", "No"], index=["Yes", "No"].index(DEFAULT_VALUES[col]))
+    else:
+        options = sorted(encoder[col].classes_.tolist())
+        default_idx = options.index(DEFAULT_VALUES[col]) if DEFAULT_VALUES[col] in options else 0
+        user_inputs[col] = st.sidebar.selectbox(PROMPTS[col], options, index=default_idx)
 
-phone_service = st.sidebar.selectbox(
-    "Do you have a phone connection with us?", ["Yes", "No"], 
-    index=["Yes", "No"].index(values["PhoneService"])
-)
+# Auto-calculated values
+monthly_charge = 20 + user_inputs["tenure"] * 0.5  # simplistic assumption
+total_charge = monthly_charge * user_inputs["tenure"]
+st.sidebar.markdown(f"💰 **Monthly Charges:** ${monthly_charge:.2f}")
+st.sidebar.markdown(f"💰 **Total Charges:** ${total_charge:.2f}")
 
-multiple_lines = st.sidebar.selectbox(
-    "Do you have multiple phone lines?", ["Yes", "No", "No phone service"], 
-    index=["Yes", "No", "No phone service"].index(values["MultipleLines"])
-)
+# Add to inputs
+user_inputs["MonthlyCharges"] = monthly_charge
+user_inputs["TotalCharges"] = total_charge
 
-internet_service = st.sidebar.selectbox(
-    "What type of internet service do you use?", ["DSL", "Fiber optic", "No"], 
-    index=["DSL", "Fiber optic", "No"].index(values["InternetService"])
-)
+# Convert to DataFrame
+input_df = pd.DataFrame([user_inputs])
 
-online_security = st.sidebar.selectbox(
-    "Do you use our online security service?", ["Yes", "No", "No internet service"], 
-    index=["Yes", "No", "No internet service"].index(values["OnlineSecurity"])
-)
+# Encode categorical variables
+for col in input_df.columns:
+    if col in encoder:
+        le = encoder[col]
+        input_df[col] = le.transform(input_df[col])
 
-online_backup = st.sidebar.selectbox(
-    "Do you use our online backup service?", ["Yes", "No", "No internet service"], 
-    index=["Yes", "No", "No internet service"].index(values["OnlineBackup"])
-)
+# Predict
+if st.button("Predict Churn"):
+    prediction = model.predict(input_df)[0]
+    prob = model.predict_proba(input_df)[0][1]
 
-device_protection = st.sidebar.selectbox(
-    "Do you have device protection with us?", ["Yes", "No", "No internet service"], 
-    index=["Yes", "No", "No internet service"].index(values["DeviceProtection"])
-)
+    st.subheader("📊 Prediction Result")
+    st.markdown(f"**Churn Prediction:** {'❌ Will Churn' if prediction else '✅ Will Not Churn'}")
+    st.markdown(f"**Confidence:** {prob*100:.2f}%")
 
-tech_support = st.sidebar.selectbox(
-    "Do you use our tech support service?", ["Yes", "No", "No internet service"], 
-    index=["Yes", "No", "No internet service"].index(values["TechSupport"])
-)
+    # SHAP explanation
+    st.subheader("🔍 Why this prediction?")
+    explainer = shap.Explainer(model)
+    shap_values = explainer(input_df)
 
-streaming_tv = st.sidebar.selectbox(
-    "Do you stream TV using our service?", ["Yes", "No", "No internet service"], 
-    index=["Yes", "No", "No internet service"].index(values["StreamingTV"])
-)
-
-streaming_movies = st.sidebar.selectbox(
-    "Do you stream movies using our service?", ["Yes", "No", "No internet service"], 
-    index=["Yes", "No", "No internet service"].index(values["StreamingMovies"])
-)
-
-contract = st.sidebar.selectbox(
-    "What type of contract do you have?", ["Month-to-month", "One year", "Two year"], 
-    index=["Month-to-month", "One year", "Two year"].index(values["Contract"])
-)
-
-paperless_billing = st.sidebar.selectbox(
-    "Do you use paperless billing?", ["Yes", "No"], 
-    index=["Yes", "No"].index(values["PaperlessBilling"])
-)
-
-payment_method = st.sidebar.selectbox(
-    "How do you usually pay your bill?",
-    ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"],
-    index=["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"].index(values["PaymentMethod"])
-)
-
-monthly_charges = st.sidebar.number_input(
-    "What is your monthly charge?", min_value=0.0, max_value=200.0, value=float(values["MonthlyCharges"])
-)
-
-total_charges = st.sidebar.number_input(
-    "What is your total amount paid so far?", min_value=0.0, max_value=10000.0, value=float(values["TotalCharges"])
-)
-# -- CODE BLOCK END --
-
+    st.markdown("The plot below shows which features most influenced the model’s decision.")
+    fig, ax = plt.subplots()
+    shap.plots.waterfall(shap_values[0], max_display=10, show=False)
+    st.pyplot(fig)
