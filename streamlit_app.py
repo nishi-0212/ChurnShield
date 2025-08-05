@@ -271,7 +271,7 @@ if st.button("🔮 Predict Churn"):
     else:
         st.success(f"✅ The customer is **Not likely to Churn** (Churn probability: **{prob:.2f}%**).")
 
-   '''
+    '''
     # SHAP Explanation
     st.write("### 🔍 Why this Prediction?")
     #shap_values = explainer.shap_values(input_encoded)
@@ -346,6 +346,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
