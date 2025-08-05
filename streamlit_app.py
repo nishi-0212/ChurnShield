@@ -1,123 +1,271 @@
 import streamlit as st
-import numpy as np
 import pandas as pd
 import joblib
+import numpy as np
 import shap
+import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 
-# Load model and encoder
-model = joblib.load("churnshield_model.pkl")
-encoder = joblib.load("model_columns.pkl")
+# -----------------------
+# Load Model & Columns
+# -----------------------
+MODEL_PATH = "churnshield_model.pkl"
+COLUMNS_PATH = "model_columns.pkl"
 
-# Define the input features required by the model (except calculated ones)
-INPUT_FEATURES = [
-    "gender", "SeniorCitizen", "Partner", "Dependents",
-    "tenure", "PhoneService", "MultipleLines", "InternetService",
-    "OnlineSecurity", "OnlineBackup", "DeviceProtection",
-    "TechSupport", "StreamingTV", "StreamingMovies",
-    "Contract", "PaperlessBilling", "PaymentMethod"
-]
+try:
+    model = joblib.load(MODEL_PATH)
+    model_columns = joblib.load(COLUMNS_PATH)
+except Exception as e:
+    st.error(f"❌ Model file not found: {e}")
+    st.stop()
 
-# Define user-friendly prompts
-PROMPTS = {
-    "gender": "What is your gender?",
-    "SeniorCitizen": "Are you a senior citizen?",
-    "Partner": "Do you have a partner?",
-    "Dependents": "Do you have any dependents?",
-    "tenure": "How many months have you been a customer?",
-    "PhoneService": "Do you use phone service?",
-    "MultipleLines": "Do you have multiple lines?",
-    "InternetService": "What kind of internet service do you use?",
-    "OnlineSecurity": "Do you have online security?",
-    "OnlineBackup": "Do you use online backup?",
-    "DeviceProtection": "Do you have device protection?",
-    "TechSupport": "Do you use tech support?",
-    "StreamingTV": "Do you stream TV?",
-    "StreamingMovies": "Do you stream movies?",
-    "Contract": "What is the contract type?",
-    "PaperlessBilling": "Do you use paperless billing?",
-    "PaymentMethod": "What is your payment method?"
-}
+# SHAP Explainer
+explainer = shap.TreeExplainer(model)
 
-# Default values
-DEFAULT_VALUES = {
-    "gender": "Female",
-    "SeniorCitizen": "No",
-    "Partner": "Yes",
+# -----------------------
+# Page Config
+# -----------------------
+st.set_page_config(page_title="ChurnShield", page_icon="🛡️", layout="centered")
+
+# -----------------------
+# App Title
+# -----------------------
+st.markdown(
+    """
+    <div style='text-align: center;'>
+        <h1>🛡️<span style='color:#F48FB1;'>ChurnShield – Customer Churn Prediction</span></h1>
+        <p style='font-size:18px;'>Predict • Prevent • Retain</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+# -----------------------
+# Default Input Values
+# -----------------------
+default_inputs = {
+    "Gender": "Female",
+    "SeniorCitizen": "No",  
+    "Partner": "No",
     "Dependents": "No",
-    "tenure": 12,
-    "PhoneService": "Yes",
+    "tenure": 0,
+    "PhoneService": "No",
     "MultipleLines": "No",
-    "InternetService": "Fiber optic",
+    "InternetService": "No",
     "OnlineSecurity": "No",
-    "OnlineBackup": "Yes",
+    "OnlineBackup": "No",
     "DeviceProtection": "No",
     "TechSupport": "No",
-    "StreamingTV": "Yes",
+    "StreamingTV": "No",
     "StreamingMovies": "No",
     "Contract": "Month-to-month",
-    "PaperlessBilling": "Yes",
-    "PaymentMethod": "Electronic check"
+    "PaperlessBilling": "No",
+    "PaymentMethod": "Electronic check",
+    "MonthlyCharges": 0.0,
+    "TotalCharges": 0.0,
 }
 
-# Streamlit UI
-st.set_page_config(page_title="ChurnShield: Customer Churn Predictor", layout="wide")
-st.title("🔐 ChurnShield")
-st.subheader("Smart, Explainable Churn Prediction for Telecom Users")
+# -----------------------
+# Reset Logic
+# -----------------------
+if "reset" not in st.session_state:
+    st.session_state.reset = False
 
-# Sidebar
-st.sidebar.header("Enter Customer Details")
+def reset_inputs():
+    st.session_state.reset = True
 
-# Reset button
-if st.sidebar.button("Reset All Inputs"):
-    st.experimental_rerun()
 
-user_inputs = {}
+# -----------------------
+# Sidebar Inputs
+# -----------------------
+st.sidebar.header("📝 Input Customer Details")
 
-for col in INPUT_FEATURES:
-    if col == "tenure":
-        user_inputs[col] = st.sidebar.slider(PROMPTS[col], 0, 72, DEFAULT_VALUES[col])
-    elif col in ["SeniorCitizen", "Partner", "Dependents", "PhoneService", "PaperlessBilling"]:
-        user_inputs[col] = st.sidebar.radio(PROMPTS[col], ["Yes", "No"], index=["Yes", "No"].index(DEFAULT_VALUES[col]))
+# Reset button functionality
+if st.sidebar.button("🔄 Reset All Inputs"):
+    for key, value in DEFAULT_VALUES.items():
+        st.session_state[key] = value
+    st.rerun()
+
+# Get current values from session state
+values = {key: st.session_state.get(key, default_inputs[key]) for key in default_inputs}
+
+# Sidebar widgets
+gender = st.sidebar.selectbox(
+    "Gender", ["Male", "Female"], 
+    index=["Male", "Female"].index(values["Gender"])
+)
+
+senior_citizen_label = st.sidebar.selectbox(
+    "Senior Citizen", ["No", "Yes"],
+    index=["No", "Yes"].index(values["SeniorCitizen"])
+)
+senior_citizen = 1 if senior_citizen_label == "Yes" else 0
+
+partner = st.sidebar.selectbox(
+    "Partner", ["Yes", "No"], 
+    index=["Yes", "No"].index(values["Partner"])
+)
+
+dependents = st.sidebar.selectbox(
+    "Dependents", ["Yes", "No"], 
+    index=["Yes", "No"].index(values["Dependents"])
+)
+
+tenure = st.sidebar.slider(
+    "Tenure (in months)", 0, 72, 
+    int(values["tenure"])
+)
+
+phone_service = st.sidebar.selectbox(
+    "Phone Service", ["Yes", "No"], 
+    index=["Yes", "No"].index(values["PhoneService"])
+)
+
+multiple_lines = st.sidebar.selectbox(
+    "Multiple Lines", ["Yes", "No", "No phone service"], 
+    index=["Yes", "No", "No phone service"].index(values["MultipleLines"])
+)
+
+internet_service = st.sidebar.selectbox(
+    "Internet Service", ["DSL", "Fiber optic", "No"], 
+    index=["DSL", "Fiber optic", "No"].index(values["InternetService"])
+)
+
+online_security = st.sidebar.selectbox(
+    "Online Security", ["Yes", "No", "No internet service"], 
+    index=["Yes", "No", "No internet service"].index(values["OnlineSecurity"])
+)
+
+online_backup = st.sidebar.selectbox(
+    "Online Backup", ["Yes", "No", "No internet service"], 
+    index=["Yes", "No", "No internet service"].index(values["OnlineBackup"])
+)
+
+device_protection = st.sidebar.selectbox(
+    "Device Protection", ["Yes", "No", "No internet service"], 
+    index=["Yes", "No", "No internet service"].index(values["DeviceProtection"])
+)
+
+tech_support = st.sidebar.selectbox(
+    "Tech Support", ["Yes", "No", "No internet service"], 
+    index=["Yes", "No", "No internet service"].index(values["TechSupport"])
+)
+
+streaming_tv = st.sidebar.selectbox(
+    "Streaming TV", ["Yes", "No", "No internet service"], 
+    index=["Yes", "No", "No internet service"].index(values["StreamingTV"])
+)
+
+streaming_movies = st.sidebar.selectbox(
+    "Streaming Movies", ["Yes", "No", "No internet service"], 
+    index=["Yes", "No", "No internet service"].index(values["StreamingMovies"])
+)
+
+contract = st.sidebar.selectbox(
+    "Contract", ["Month-to-month", "One year", "Two year"], 
+    index=["Month-to-month", "One year", "Two year"].index(values["Contract"])
+)
+
+paperless_billing = st.sidebar.selectbox(
+    "Paperless Billing", ["Yes", "No"], 
+    index=["Yes", "No"].index(values["PaperlessBilling"])
+)
+
+payment_method = st.sidebar.selectbox(
+    "Payment Method",
+    ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"],
+    index=["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"].index(values["PaymentMethod"])
+)
+
+monthly_charges = st.sidebar.number_input(
+    "Monthly Charges", min_value=0.0, max_value=200.0, value=float(values["MonthlyCharges"])
+)
+
+total_charges = st.sidebar.number_input(
+    "Total Charges", min_value=0.0, max_value=10000.0, value=float(values["TotalCharges"])
+)
+# -----------------------
+# Prepare Input Data
+# -----------------------
+input_data = pd.DataFrame({
+    'gender': [gender],
+    'SeniorCitizen': [senior_citizen],
+    'Partner': [partner],
+    'Dependents': [dependents],
+    'tenure': [tenure],
+    'PhoneService': [phone_service],
+    'MultipleLines': [multiple_lines],
+    'InternetService': [internet_service],
+    'OnlineSecurity': [online_security],
+    'OnlineBackup': [online_backup],
+    'DeviceProtection': [device_protection],
+    'TechSupport': [tech_support],
+    'StreamingTV': [streaming_tv],
+    'StreamingMovies': [streaming_movies],
+    'Contract': [contract],
+    'PaperlessBilling': [paperless_billing],
+    'PaymentMethod': [payment_method],
+    'MonthlyCharges': [monthly_charges],
+    'TotalCharges': [total_charges]
+})
+
+st.write("### 📊 Customer Input Summary")
+st.dataframe(input_data.T, use_container_width=True)
+
+input_encoded = pd.get_dummies(input_data)
+for col in model_columns:
+    if col not in input_encoded:
+        input_encoded[col] = 0
+input_encoded = input_encoded[model_columns]
+
+# -----------------------
+# Prediction & SHAP
+# -----------------------
+if st.button("🔮 Predict Churn"):
+    prediction = model.predict(input_encoded)[0]
+    prob = model.predict_proba(input_encoded)[0][1] * 100
+    loyalty_score = 100 - prob
+
+    # Gauge Chart
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=loyalty_score,
+        title={'text': "Loyalty Score (0=Churn Likely, 100=Safe)"},
+        gauge={'axis': {'range': [0, 100]},
+               'bar': {'color': "#F48FB1"},
+               'steps': [
+                   {'range': [0, 50], 'color': "#FFB6C1"},
+                   {'range': [50, 80], 'color': "#FFDAB9"},
+                   {'range': [80, 100], 'color': "#C1FFC1"}
+               ]}
+    ))
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Prediction text
+    if prediction == 1:
+        st.error(f"⚠️ The customer is likely to **Churn** (Probability: **{prob:.2f}%**).")
     else:
-        options = sorted(encoder[col].classes_.tolist())
-        default_idx = options.index(DEFAULT_VALUES[col]) if DEFAULT_VALUES[col] in options else 0
-        user_inputs[col] = st.sidebar.selectbox(PROMPTS[col], options, index=default_idx)
+        st.success(f"✅ The customer is **Not likely to Churn** (Churn probability: **{prob:.2f}%**).")
 
-# Auto-calculated values
-monthly_charge = 20 + user_inputs["tenure"] * 0.5  # simplistic assumption
-total_charge = monthly_charge * user_inputs["tenure"]
-st.sidebar.markdown(f"💰 **Monthly Charges:** ${monthly_charge:.2f}")
-st.sidebar.markdown(f"💰 **Total Charges:** ${total_charge:.2f}")
+    # SHAP Explanation
+    st.write("### 🔍 Why this Prediction?")
+    shap_values = explainer.shap_values(input_encoded)
+    shap_df = pd.DataFrame({
+        "Feature": input_encoded.columns,
+        "SHAP Value": shap_values[0]
+    }).sort_values(by="SHAP Value", key=abs, ascending=False).head(5)
 
-# Add to inputs
-user_inputs["MonthlyCharges"] = monthly_charge
-user_inputs["TotalCharges"] = total_charge
+    st.bar_chart(shap_df.set_index("Feature"))
 
-# Convert to DataFrame
-input_df = pd.DataFrame([user_inputs])
-
-# Encode categorical variables
-for col in input_df.columns:
-    if col in encoder:
-        le = encoder[col]
-        input_df[col] = le.transform(input_df[col])
-
-# Predict
-if st.button("Predict Churn"):
-    prediction = model.predict(input_df)[0]
-    prob = model.predict_proba(input_df)[0][1]
-
-    st.subheader("📊 Prediction Result")
-    st.markdown(f"**Churn Prediction:** {'❌ Will Churn' if prediction else '✅ Will Not Churn'}")
-    st.markdown(f"**Confidence:** {prob*100:.2f}%")
-
-    # SHAP explanation
-    st.subheader("🔍 Why this prediction?")
-    explainer = shap.Explainer(model)
-    shap_values = explainer(input_df)
-
-    st.markdown("The plot below shows which features most influenced the model’s decision.")
-    fig, ax = plt.subplots()
-    shap.plots.waterfall(shap_values[0], max_display=10, show=False)
-    st.pyplot(fig)
+# -----------------------
+# Footer
+# -----------------------
+st.markdown(
+    """
+    ---
+    <div style='text-align: center; font-size: 14px; color: gray;'>
+        Made with ❤️ using Streamlit | ChurnShield v1.2
+    </div>
+    """,
+    unsafe_allow_html=True
+)
