@@ -271,63 +271,16 @@ if st.button("🔮 Predict Churn"):
     else:
         st.success(f"✅ The customer is **Not likely to Churn** (Churn probability: **{prob:.2f}%**).")
 
-    '''
     # SHAP Explanation
     st.write("### 🔍 Why this Prediction?")
-    #shap_values = explainer.shap_values(input_encoded)
-    #shap_df = pd.DataFrame({
-    #    "Feature": input_encoded.columns,
-    #    "SHAP Value": shap_values[0]
-    #}).sort_values(by="SHAP Value", key=abs, ascending=False).head(5)
-
-    #st.bar_chart(shap_df.set_index("Feature"))
     shap_values = explainer.shap_values(input_encoded)
+    shap_df = pd.DataFrame({
+        "Feature": input_encoded.columns,
+        "SHAP Value": shap_values[0]
+    }).sort_values(by="SHAP Value", key=abs, ascending=False).head(5)
 
-    st.write("#### 💡 Top SHAP Feature Contributions")
-    st.write("Visualizing how features impact churn prediction.")
+    st.bar_chart(shap_df.set_index("Feature"))
 
-    # Waterfall plot using pastel look
-    fig, ax = plt.subplots(figsize=(8, 5))
-    shap.plots._waterfall.waterfall_legacy(
-        explainer.expected_value, shap_values[0], input_encoded.columns, max_display=8, show=False
-    )
-
-    st.pyplot(fig)
-'''
-# SHAP Explanation Section
-st.write("### 🧠 SHAP Decision Plot - Why This Prediction?")
-
-# Compute SHAP values
-shap_values = explainer.shap_values(input_encoded)
-
-# Use correct expected value and SHAP for class 1 (churn)
-expected_value = explainer.expected_value[1] if isinstance(explainer.expected_value, list) else explainer.expected_value
-instance_shap = shap_values[1][0] if isinstance(shap_values, list) else shap_values[0]
-
-# Decision Plot
-fig = plt.figure()
-shap.decision_plot(
-    expected_value,
-    instance_shap,
-    input_encoded.iloc[0],
-    feature_names=input_encoded.columns,
-    show=False
-)
-st.pyplot(fig)
-
-# Plain English Explanation
-st.markdown("### 🗣️ What This Means:")
-st.markdown("""
-This plot explains why the model predicted churn or not:
-
-- The gray line starts from the model’s baseline prediction (average).
-- As we move right, each feature either pushes the score up (more likely to churn) or down (less likely to churn).
-- Features in red increased the chance of churn.
-- Features in blue reduced the chance.
-- The final point is the actual prediction score for this customer.
-
-It shows exactly which features mattered most in this decision.
-""")
 
 # -----------------------
 # Footer
@@ -341,6 +294,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
