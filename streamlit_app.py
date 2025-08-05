@@ -298,13 +298,7 @@ if st.button("🔮 Predict Churn"):
 st.write("### 🔍 Why this Prediction?")
 shap_values = explainer.shap_values(input_encoded)
 
-# Waterfall plot
-st.markdown("#### 📉 Waterfall Plot")
-fig, ax = plt.subplots(figsize=(8, 5))
-shap.plots._waterfall.waterfall_legacy(
-    explainer.expected_value[1], shap_values[1][0], input_encoded.columns, max_display=8, show=False
-)
-st.pyplot(fig)
+
 
 # Force plot
 st.markdown("#### 💥 Force Plot")
@@ -346,6 +340,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
