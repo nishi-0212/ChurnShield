@@ -178,12 +178,18 @@ payment_method = st.sidebar.selectbox(
 )
 
 monthly_charges = st.sidebar.number_input(
-    "Monthly Charges", min_value=0.0, max_value=200.0, value=float(values["MonthlyCharges"])
+    "Monthly Charges", min_value=0.0, max_value=2000.0, value=float(values["MonthlyCharges"])
 )
 
-total_charges = st.sidebar.number_input(
-    "Total Charges", min_value=0.0, max_value=10000.0, value=float(values["TotalCharges"])
-)
+'''total_charges = st.sidebar.number_input(
+    "Total Charges", min_value=0.0, max_value=1000000.0, value=float(values["TotalCharges"])
+)'''
+
+# 🔢 Automatically calculate Total Charges
+total_charges = round(monthly_charges * tenure, 2)
+
+# ✅ Show Total Charges as read-only info
+st.sidebar.markdown(f"**Calculated Total Charges:** ₹ {total_charges}")
 # -----------------------
 # Prepare Input Data
 # -----------------------
@@ -269,4 +275,5 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
