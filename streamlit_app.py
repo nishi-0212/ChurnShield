@@ -294,39 +294,40 @@ if st.button("🔮 Predict Churn"):
 
     st.pyplot(fig)
 '''
-# SHAP Explanation
-st.write("### 🔍 Why this Prediction?")
+# SHAP Explanation Section
+st.write("### 🧠 SHAP Decision Plot - Why This Prediction?")
+
+# Compute SHAP values
 shap_values = explainer.shap_values(input_encoded)
 
+# Use correct expected value and SHAP for class 1 (churn)
+expected_value = explainer.expected_value[1] if isinstance(explainer.expected_value, list) else explainer.expected_value
+instance_shap = shap_values[1][0] if isinstance(shap_values, list) else shap_values[0]
 
-
-# Force plot
-st.markdown("#### 💥 Force Plot")
-force_plot = shap.plots.force(
-    explainer.expected_value[0], shap_values[1][0], input_encoded.iloc[0], matplotlib=False, show=False
-)
-components.html(shap.getjs() + force_plot.html(), height=300)
-
-# Decision plot
-st.markdown("#### 🧠 Decision Plot")
+# Decision Plot
+fig = plt.figure()
 shap.decision_plot(
-    explainer.expected_value[1],
-    shap_values[1],
-    input_encoded,
+    expected_value,
+    instance_shap,
+    input_encoded.iloc[0],
     feature_names=input_encoded.columns,
-    highlight=0  # Highlights the first input row
+    show=False
 )
+st.pyplot(fig)
 
-# User-friendly explanation
-st.markdown("### 🗣️ What does this mean?")
+# Plain English Explanation
+st.markdown("### 🗣️ What This Means:")
 st.markdown("""
-- The model starts with an average churn probability for all customers.
-- Then it adjusts the score based on your customer's features.
-- The **Waterfall Plot** shows how each feature pushes the prediction up or down.
-- The **Force Plot** visualizes this as red (↑ churn) and blue (↓ churn) forces.
-- The **Decision Plot** traces the model's reasoning step-by-step.
-""")
+This plot explains why the model predicted churn or not:
 
+- The gray line starts from the model’s baseline prediction (average).
+- As we move right, each feature either pushes the score up (more likely to churn) or down (less likely to churn).
+- Features in red increased the chance of churn.
+- Features in blue reduced the chance.
+- The final point is the actual prediction score for this customer.
+
+It shows exactly which features mattered most in this decision.
+""")
 
 # -----------------------
 # Footer
@@ -340,6 +341,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
