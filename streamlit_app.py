@@ -284,8 +284,9 @@ if st.button("🔮 Predict Churn"):
     # Waterfall plot using pastel look
     fig, ax = plt.subplots(figsize=(8, 5))
     shap.plots._waterfall.waterfall_legacy(
-        explainer.expected_value[1], shap_values[1][0], input_encoded.columns, max_display=8, show=False
+        explainer.expected_value, shap_values[0], input_encoded.columns, max_display=8, show=False
     )
+
     st.pyplot(fig)
 
 # -----------------------
@@ -300,6 +301,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
