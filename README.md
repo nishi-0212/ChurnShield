@@ -7,7 +7,7 @@
 
 **ChurnShield** is an end-to-end machine learning system that predicts customer churn in the telecom industry and explains *why* each prediction was made using SHAP explainability — enabling targeted, data-driven retention strategies.
 
-👉 **[Try the Live App]([https://churnshieldbynishi.streamlit.app/](https://churnshield-bynishi.streamlit.app/)**
+👉  **[Try the Live App](https://churnshield-bynishi.streamlit.app/)**
 
 ---
 
