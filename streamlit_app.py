@@ -19,13 +19,15 @@ st.set_page_config(page_title="ChurnShield", page_icon="🛡️", layout="wide")
 # ── Load model ────────────────────────────────────────────────────────────────
 @st.cache_resource
 def load_model():
-    model = joblib.load("notebooks/models/churnshield_model.pkl")
-    columns = joblib.load("notebooks/models/model_columns.pkl")
+    saved     = joblib.load("notebooks/models/churnshield_model.pkl")
+    model     = saved["model"]
+    threshold = saved["threshold"]
+    columns   = joblib.load("notebooks/models/model_columns.pkl")
     explainer = shap.TreeExplainer(model)
-    return model, columns, explainer
+    return model, columns, explainer, threshold
 
 try:
-    model, model_columns, explainer = load_model()
+    model, model_columns, explainer, threshold = load_model()
 except Exception as e:
     st.error(f"❌ Could not load model: {e}")
     st.stop()
@@ -137,11 +139,31 @@ input_data = pd.DataFrame([{
     "PaymentMethod":     payment_method,
     "MonthlyCharges":    monthly_charges,
     "TotalCharges":      total_charges,
-    # engineered features — must match training
-    "AvgChargesPerMonth":       round(total_charges / (tenure + 1), 2),
-    "HighMonthlyCharge":        int(monthly_charges > 64.76),   # training median
-    "IsLongTerm":               int(contract != "Month-to-month"),
+    # Original engineered features
+    "AvgChargesPerMonth":        round(total_charges / (tenure + 1), 2),
+    "HighMonthlyCharge":         int(monthly_charges > 64.76),
+    "IsLongTerm":                int(contract != "Month-to-month"),
     "Tenure_Charge_Interaction": tenure * monthly_charges,
+    # New engineered features
+    "ChargeGap":         monthly_charges - round(total_charges / (tenure + 1), 2),
+    "NumServices":       sum([
+                             phone_service    == "Yes",
+                             online_security  == "Yes",
+                             online_backup    == "Yes",
+                             device_protection== "Yes",
+                             tech_support     == "Yes",
+                             streaming_tv     == "Yes",
+                             streaming_movies == "Yes",
+                         ]),
+    "RevenueAtRisk":     round(monthly_charges * (1 - tenure / 73), 2),
+    "IsNewCustomer":     int(tenure <= 6),
+    "NoSupportServices": int(
+                             online_security != "Yes" and
+                             tech_support    != "Yes" and
+                             online_backup   != "Yes"
+                         ),
+    "HighRiskPayment":   int(paperless == "Yes" and payment_method == "Electronic check"),
+    "LogTenure":         round(np.log1p(tenure), 4),
 }])
 
 # ── Main panel ────────────────────────────────────────────────────────────────
@@ -167,7 +189,7 @@ with col_right:
 
         # Predict
         prob        = model.predict_proba(input_encoded)[0][1]
-        prediction  = int(prob >= 0.5)
+        prediction  = int(prob >= threshold)
         loyalty     = 1 - prob
 
         # Gauge

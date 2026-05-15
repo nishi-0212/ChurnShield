@@ -13,12 +13,14 @@
 
 ## 📊 Model Performance
 
-| Model               | Accuracy | ROC-AUC | F1 (Churn) |
-|---------------------|----------|---------|------------|
-| Logistic Regression | ~80%     | ~0.845  | ~0.59      |
-| Random Forest       | ~79%     | ~0.827  | ~0.56      |
-| **XGBoost** ✅      | **~81%** | **~0.857** | **~0.62** |
+| Model                        | Accuracy | ROC-AUC | F1 (Churn) | Churn Recall |
+|------------------------------|----------|---------|------------|--------------|
+| Logistic Regression          | 80.1%    | 0.846   | 0.581      | 52.1%        |
+| Random Forest                | 80.5%    | 0.847   | 0.583      | 51.3%        |
+| **XGBoost (threshold=0.43)** ✅ | **75.5%** | **0.837** | **0.631** | **78.9%** |
 
+> LR/RF achieve higher accuracy but miss ~48% of churners. XGBoost is deployed because **churn recall matters most** — catching a churner is more valuable than avoiding a false retention offer. Threshold tuned from default 0.5 to 0.43 to optimise F1 on the minority churn class.
+>
 > *Run `notebooks/ChurnShield_Training.ipynb` to reproduce exact numbers.*
 
 ---
