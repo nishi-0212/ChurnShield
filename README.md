@@ -21,18 +21,20 @@
 
 > LR/RF achieve higher accuracy but miss ~48% of churners. XGBoost is deployed because **churn recall matters most** — catching a churner is more valuable than avoiding a false retention offer. Threshold tuned from default 0.5 to 0.43 to optimise F1 on the minority churn class.
 >
-> *Run `notebooks/ChurnShield_Training.ipynb` to reproduce exact numbers.*
+
 
 ---
 
 ## 🧠 How It Works
 
 ```
-Customer Data → Feature Engineering → XGBoost Model → Churn Probability
-                                                     ↓
-                                           SHAP Explainer
-                                                     ↓
-                                     Claim-level Feature Attribution
+Data & Prediction Pipeline:
+
+Customer Data → Preprocessing & Feature Engineering → XGBoost Model → Churn Probability
+
+Interpretability Pipeline (SHAP):
+
+XGBoost Model + Input Features → SHAP Explainer → Shapley Values → Customer-level Feature Attribution
 ```
 
 1. **Input** — Enter customer demographics, services, and billing details
@@ -56,23 +58,26 @@ Customer Data → Feature Engineering → XGBoost Model → Churn Probability
 
 ```
 ChurnShield/
-├── streamlit_app.py              ← Main Streamlit application
-├── requirements.txt              ← Pinned dependencies
-├── README.md
 ├── .streamlit/
-│   └── config.toml              ← Theme configuration
-├── models/
-│   ├── churnshield_model.pkl    ← Trained XGBoost model
-│   └── model_columns.pkl        ← Feature column order
+│   └── config.toml         
 ├── notebooks/
-│   └── ChurnShield_Training.ipynb ← Full training pipeline
-└── assets/
-    ├── eda_plots.png
-    ├── model_comparison.png
-    ├── confusion_matrix.png
-    ├── roc_curves.png
-    ├── shap_importance.png
-    └── shap_beeswarm.png
+│   ├── assets/              
+│   │   ├── confusion_matrix.png
+│   │   ├── eda_plots.png
+│   │   ├── model_comparison.png
+│   │   ├── roc_curves.png
+│   │   ├── shap_beeswarm.png
+│   │   ├── shap_dependence.png
+│   │   └── shap_importance.png
+│   ├── models/              
+│   │   ├── churnshield_model.pkl
+│   │   └── model_columns.pkl
+│   └── ChurnShield_Training.ipynb  
+├── WA_Fn-UseC_-Telco-Customer-Churn.csv  
+├── .gitignore               
+├── README.md                
+├── requirements.txt         
+└── streamlit_app.py         
 ```
 
 ---
@@ -114,8 +119,3 @@ To retrain the model:
 
 ---
 
-## 👩‍💻 Author
-
-**Nishi Vishwakarma**  
-B.Tech ECE + AI, IGDTUW Delhi  
-[GitHub](https://github.com/nishi-0212) · [LinkedIn](https://linkedin.com/in/nishi-vishwakarma)
