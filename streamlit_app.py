@@ -19,10 +19,10 @@ st.set_page_config(page_title="ChurnShield", page_icon="🛡️", layout="wide")
 # ── Load model ────────────────────────────────────────────────────────────────
 @st.cache_resource
 def load_model():
-    saved     = joblib.load("notebooks/models/churnshield_model.pkl")
+    saved     = joblib.load("models/churnshield_model.pkl")
     model     = saved["model"]
     threshold = saved["threshold"]
-    columns   = joblib.load("notebooks/models/model_columns.pkl")
+    columns   = joblib.load("models/model_columns.pkl")
     explainer = shap.TreeExplainer(model)
     return model, columns, explainer, threshold
 
@@ -269,7 +269,7 @@ with col_right:
 st.divider()
 st.markdown("""
 <div style='text-align:center; color:#adb5bd; font-size:13px;'>
-    ChurnShield · XGBoost + SHAP · Telco Customer Churn Dataset ·
+    ChurnShield · XGBoost + SHAP · Telco Customer Churn Dagitaset ·
     Built by <a href="https://github.com/nishi-0212" style="color:#F48FB1;">Nishi Vishwakarma</a>
 </div>
 """, unsafe_allow_html=True)
