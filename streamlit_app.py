@@ -19,10 +19,10 @@ st.set_page_config(page_title="ChurnShield", page_icon="🛡️", layout="wide")
 # ── Load model ────────────────────────────────────────────────────────────────
 @st.cache_resource
 def load_model():
-    saved     = joblib.load("models/churnshield_model.pkl")
+    saved     = joblib.load("notebooks/models/churnshield_model.pkl")
     model     = saved["model"]
     threshold = saved["threshold"]
-    columns   = joblib.load("models/model_columns.pkl")
+    columns   = joblib.load("notebooks/models/model_columns.pkl")
     explainer = shap.TreeExplainer(model)
     return model, columns, explainer, threshold
 
